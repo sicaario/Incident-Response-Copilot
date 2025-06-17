@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast"
 interface Incident {
   $id: string
   timestamp: string
-  parsed_errors: string // JSON string
+  parsed_errors: string 
   root_cause: string
   resolution_status: string
   recommended_solutions: string
