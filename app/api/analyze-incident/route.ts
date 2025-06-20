@@ -1,9 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-// Use Edge Runtime for better performance and reliability
 export const runtime = "edge"
 
-// Get our machine learning API keys from environment
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY
 const MEM0_API_KEY = process.env.MEM0_API_KEY
@@ -14,9 +12,8 @@ interface AnalysisRequest {
   fileId?: string
 }
 
-// Simple health check endpoint
 export async function GET() {
-  console.log("🔍 Analysis API health check")
+  console.log("Analysis API health check")
 
   return NextResponse.json({
     message: "Analysis API is running on Edge Runtime",
@@ -30,19 +27,18 @@ export async function GET() {
   })
 }
 
-// Main analysis endpoint - this is where the magic happens
 export async function POST(request: NextRequest) {
-  console.log("🚀 Starting incident analysis")
+  console.log("Starting incident analysis")
 
   try {
-    // First, make sure we have all our API keys
+    // Make sure we have all our API keys
     const missingKeys = []
     if (!GROQ_API_KEY) missingKeys.push("GROQ_API_KEY")
     if (!TAVILY_API_KEY) missingKeys.push("TAVILY_API_KEY")
     if (!MEM0_API_KEY) missingKeys.push("MEM0_API_KEY")
 
     if (missingKeys.length > 0) {
-      console.error("❌ Missing API keys:", missingKeys)
+      console.error("Missing API keys:", missingKeys)
       return NextResponse.json(
         {
           error: "Server configuration error: Missing API keys",
@@ -52,13 +48,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log("✅ All machine learning API keys present")
+    console.log("All machine learning API keys present")
 
     // Parse the request data
     const body = await request.json()
     const { incidentId, logContent }: AnalysisRequest = body
 
-    console.log("📝 Request data:", {
+    console.log("Request data:", {
       incidentId: incidentId?.slice(0, 8),
       logContentLength: logContent?.length,
       hasIncidentId: !!incidentId,
@@ -67,14 +63,13 @@ export async function POST(request: NextRequest) {
 
     // Validate we have the required data
     if (!incidentId || !logContent) {
-      console.error("❌ Missing required fields:", { hasIncidentId: !!incidentId, hasLogContent: !!logContent })
+      console.error("Missing required fields:", { hasIncidentId: !!incidentId, hasLogContent: !!logContent })
       return NextResponse.json({ error: "Missing required fields: incidentId and logContent" }, { status: 400 })
     }
 
-    console.log(`✅ Starting analysis for incident: ${incidentId}`)
+    console.log(`Starting analysis for incident: ${incidentId}`)
 
-    // Run our machine learning pipeline
-    console.log("🚀 Running machine learning pipeline...")
+    console.log("Running machine learning pipeline...")
     const analysisResults = await runMachineLearningPipeline(logContent)
 
     return NextResponse.json({
@@ -84,7 +79,7 @@ export async function POST(request: NextRequest) {
       incidentId,
     })
   } catch (error: any) {
-    console.error("❌ Analysis API error:", {
+    console.error("Analysis API error:", {
       message: error.message,
       stack: error.stack,
       name: error.name,
@@ -101,29 +96,29 @@ async function runMachineLearningPipeline(logContent: string) {
   try {
     console.log(`🚀 Starting machine learning pipeline`)
 
-    // Step 1: Parse the logs to extract errors and important info
+    // 1- Parse the logs to extract errors and important info
     console.log("🔍 Step 1: Running log parsing agent...")
     const parsedData = await logParsingAgent(logContent)
-    console.log("✅ Log parsing completed:", {
+    console.log("Log parsing completed:", {
       errorCount: parsedData.errors.length,
     })
 
-    // Step 2: Analyze the root cause of the issues
+    // 2- Analyze the root cause of the issues
     console.log("🧠 Step 2: Running root cause analysis agent...")
     const rootCause = await rootCauseAgent(logContent, parsedData.errors)
-    console.log("✅ Root cause analysis completed")
+    console.log("Root cause analysis completed")
 
-    // Step 3: Search the web for similar issues and solutions
-    console.log("🔎 Step 3: Running research agent...")
+    // 3- Search the web for similar issues and solutions
+    console.log("Step 3: Running research agent...")
     const externalContext = await researchAgent(parsedData.errors, rootCause)
-    console.log("✅ Research completed")
+    console.log("Research completed")
 
-    // Step 4: Generate actionable solutions
-    console.log("💡 Step 4: Running solution synthesis agent...")
+    // 4- Generate actionable solutions
+    console.log("Step 4: Running solution synthesis agent...")
     const solutions = await solutionAgent(logContent, rootCause, externalContext)
-    console.log("✅ Solution generation completed")
+    console.log("Solution generation completed")
 
-    console.log("🎉 Machine learning pipeline completed successfully")
+    console.log("Machine learning pipeline completed successfully")
 
     return {
       parsed_errors: parsedData.errors || [],
@@ -133,12 +128,12 @@ async function runMachineLearningPipeline(logContent: string) {
       resolution_status: "resolved", 
     }
   } catch (error: any) {
-    console.error("❌ Machine learning pipeline error:", error)
+    console.error("Machine learning pipeline error:", error)
     throw error
   }
 }
 
-// Agent 1: Parse logs and extract errors
+// Agent 1- Parse logs and extract errors
 async function logParsingAgent(logContent: string) {
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -172,13 +167,11 @@ async function logParsingAgent(logContent: string) {
     const content = data.choices[0].message.content
 
     try {
-      // Try to parse as JSON first
       const parsed = JSON.parse(content)
       return {
         errors: Array.isArray(parsed.errors) ? parsed.errors.slice(0, 10) : [],
       }
     } catch {
-      // If JSON parsing fails, extract error lines manually
       const lines = content
         .split("\n")
         .filter((line) => line.toLowerCase().includes("error"))
@@ -194,7 +187,7 @@ async function logParsingAgent(logContent: string) {
   }
 }
 
-// Agent 2: Analyze root cause of the issues
+// Agent 2- Analyze root cause of the issues
 async function rootCauseAgent(logContent: string, errors: string[]) {
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -225,20 +218,19 @@ async function rootCauseAgent(logContent: string, errors: string[]) {
     }
 
     const data = await response.json()
-    return data.choices[0].message.content.slice(0, 800)
+    const content = data.choices[0].message.content
+    return content.trim()   
   } catch (error: any) {
     return `Root cause analysis failed: ${error.message}`
   }
 }
 
-// Agent 3: Research similar issues online
+// Agent 3- Research similar issues online
 async function researchAgent(errors: string[], rootCause: string) {
   try {
-    // Extract and score keywords from errors
     const keywordWeights = new Map<string, number>();
     
     errors.concat(rootCause).forEach(text => {
-      // Split while preserving technical constructs
       const tokens = text.match(/([A-Z]{2,}(?=[A-Z]|\b)|[\w#]+|\d{3,})/g) || [];
       
       tokens.forEach(token => {
@@ -286,10 +278,10 @@ async function researchAgent(errors: string[], rootCause: string) {
       body: JSON.stringify({
         api_key: TAVILY_API_KEY,
         query: searchQuery,
-        search_depth: "advanced",  // Deeper analysis
+        search_depth: "advanced",  
         include_domains: ["stackoverflow.com", "github.com"],
-        max_results: 5,            // More results
-        include_answer: true        // Include summarized answers
+        max_results: 5,            
+        include_answer: true        
       })
     });
 
@@ -298,12 +290,12 @@ async function researchAgent(errors: string[], rootCause: string) {
     const data = await response.json();
     if (!data.results?.length) return "No relevant solutions found";
 
-    // Prioritize StackOverflow results
+
     return data.results
       .sort((a, b) => 
         b.url.includes("stackoverflow") - a.url.includes("stackoverflow")
       )
-      .slice(0, 3) // Top 3 most relevant
+      .slice(0, 5) 
       .map(result => {
         const source = result.url.includes("stackoverflow")
           ? "🔥 StackOverflow" 
@@ -318,7 +310,7 @@ async function researchAgent(errors: string[], rootCause: string) {
   }
 }
 
-// Agent 4: Generate actionable solutions
+// Agent 4- Generate actionable solutions
 async function solutionAgent(logContent: string, rootCause: string, externalContext: string) {
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -349,7 +341,8 @@ async function solutionAgent(logContent: string, rootCause: string, externalCont
     }
 
     const data = await response.json()
-    return data.choices[0].message.content.slice(0, 1500)
+    const content = data.choices[0].message.content
+    return content.trim()
   } catch (error: any) {
     return `Solution generation failed: ${error.message}`
   }
